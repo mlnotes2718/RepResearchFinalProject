@@ -8,11 +8,9 @@ date: "2024-02-21"
 stormData <- read.csv("StormData.csv.bz2")
 ```
 
+### Reduce data size
 ```{r}
 reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
-```
-
-```{r}
 reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
 reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
@@ -22,6 +20,8 @@ reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
+
+
 ```{r}
 filter(reducedStormData, EVTYPE=="?")
 ```
@@ -29,6 +29,19 @@ filter(reducedStormData, EVTYPE=="?")
 No data, no remarks. Hence row to be removed.
 
 ```{r}
-filter(reducedStormData, EVTYPE=="AGRICULTURAL FREEZE")
+af <- filter(reducedStormData, EVTYPE=="AGRICULTURAL FREEZE")
+af
+```
+```{r}
+af[,"REMARKS"]
+```
+
+```{r}
+ac <- filter(reducedStormData, EVTYPE=="APACHE COUNTY")
+ac
+
+```
+```{r}
+ac[,"REMARKS"]
 ```
 

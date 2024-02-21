@@ -9,10 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Analysis of Human and Economic Impact of Storms
+# Analysis of Human and Economic Impact of Storms in United States
+This report and teh relevant data is available at [https://github.com/mlnotes2718/RepResearchFinalProject](https://github.com/mlnotes2718/RepResearchFinalProject)
 
 ## SYNOPSIS
-The following is an analysis of various kind of storm is the United States since 1950s. 
+The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm.
 
 
 ## DATA PROCESSING
@@ -56,23 +57,59 @@ download.file(fileURL, destfile = "./StormData.csv.bz2")
 stormData <- read.csv("StormData.csv.bz2")
 ```
 
-### Processing Data
-1. We reduce the dataset to only the few columns that we want.
+File Structure
 ```{r}
-reducedData <- select(stormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP)
-reducedData <- filter(reducedData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
+str(stormData)
 ```
+
+### Processing Data
+1. First we will filter out those data that has fatalities, injuries, property damage and crop damage. 
+```{r}
+reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
+```
+
+```{r}
+reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
+```
+
+2. Check for NA
+```{r}
+stormTypeNA <- is.na(reducedStormData$EVTYPE)
+filter(reducedStormData, stormTypeNA)
+```
+No NA for storm type
+
+
+```{r}
+casualtiesNA <- is.na(reducedStormData$FATALITIES | reducedStormData$INJURIES)
+filter(reducedStormData, casualtiesNA)
+```
+
+No NA for fatalities or injuries.
+
+```{r}
+damageNA <- is.na(reducedStormData$PROPDMG | reducedStormData$CROPDMG)
+filter(reducedStormData, damageNA)
+```
+No NA for property or crop damage.
+
+```{r}
+unique(reducedStormData$EVTYPE)
+```
+
+There are leading and tailing space in the storm type.
 
 2. Clean up EVTYPE
+Beside remove leading and trailing space, we also convert all strom type to upper case
 ```{r}
-reducedData$EVTYPE <- trimws(reducedData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
-reducedData$EVTYPE <- tolower(reducedData$EVTYPE)
-reducedData$EVTYPE <- toupper(reducedData$EVTYPE)
+reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
+reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
+reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
 ```
 
 
 ```{r}
-evtypeLst <- sort(unique(reducedData$EVTYPE))
+evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
 
@@ -80,13 +117,14 @@ evtypeLst
 
 ```{r}
 removeEvtypeCondition <- c("?")
-cleanStormData <- subset(reducedData, EVTYPE != removeEvtypeCondition)
+cleanStormData <- subset(reducedStormData, EVTYPE != removeEvtypeCondition)
 ```
 
 
 ```{r}
-wrongType <- c("ASTRONOMICAL HIGH TIDE", "AVALANCE", "BLIZZARD/WINTER STORM")
+wrongType <- c("ASTRONOMICAL HIGH TIDE", "AVALANCE")
 correctType <- c("ASTRONOMICAL LOW TIDE", "AVALANCHE")
+
 ```
 
 
@@ -98,7 +136,7 @@ replacement <- c(0,1,0,1000,1000,1000000,1000000,1000000000,1000000000)
 reducedData$PROPDMGEXP <- replace(reducedData$PROPDMGEXP, reducedData$PROPDMGEXP %in% findCon, replacement)
 ```
 
-2. We then create a dataframe that is group by the event type, removing fatalities and inhuries that are 0.
+2. We then create a dataframe that is group by the event type, removing fatalities and injuries that are 0.
 ```{r}
 fatalDf <- reducedData %>%
     group_by(EVTYPE) %>%
@@ -114,14 +152,14 @@ rankedFatalities <- fatalDf[1:10,]
 rankedFatalities
 ```
 
-4. We need to convert and melt the dataframe into a format for ploting
+4. We need to convert and melt the dataframe into a format for plotting
 ```{r}
 plotData <- as.data.frame(rankedFatalities)
 meltedPlotData <- melt(plotData, id.vars="EVTYPE", variable_name = "Casualties_Type")
 meltedPlotData
 ```
 
-5. Ploting 
+5. Plotting 
 ```{r}
 ggplot(meltedPlotData, aes(fill=Casualties_Type,x=reorder(EVTYPE, -value),y=value))+ geom_bar(position="stack",stat="identity") + ylab("Number of Casualties")+ xlab("Type Of Disaster")+ggtitle("Top 10 Casualties Group by Disaster Type")+ theme(axis.text.x = element_text(angle=45, hjust=1))
 ```
