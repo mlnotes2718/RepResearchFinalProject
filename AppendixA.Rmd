@@ -11,14 +11,20 @@ stormData <- read.csv("StormData.csv.bz2")
 ### Reduce data size
 ```{r}
 reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
+reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
 reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
 reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
+reducedStormData$EVTYPE <- str_squish(reducedStormData$EVTYPE)
 ```
 
 ```{r}
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
+```
+
+```{r}
+
 ```
 
 
@@ -44,4 +50,7 @@ ac
 ```{r}
 ac[,"REMARKS"]
 ```
+
+To classified as "THUNDERSTORM WIND"
+
 
