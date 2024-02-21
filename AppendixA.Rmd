@@ -1,0 +1,34 @@
+---
+title: "AppendixA"
+date: "2024-02-21"
+---
+
+### Read File
+```{r}
+stormData <- read.csv("StormData.csv.bz2")
+```
+
+```{r}
+reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
+```
+
+```{r}
+reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
+reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
+reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
+```
+
+```{r}
+evtypeLst <- sort(unique(reducedStormData$EVTYPE))
+evtypeLst
+```
+```{r}
+filter(reducedStormData, EVTYPE=="?")
+```
+
+No data, no remarks. Hence row to be removed.
+
+```{r}
+filter(reducedStormData, EVTYPE=="AGRICULTURAL FREEZE")
+```
+
