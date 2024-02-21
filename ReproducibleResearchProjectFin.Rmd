@@ -23,6 +23,7 @@ The following is an analysis of various kind of storm is the United States since
 # Import Library
 library(dplyr)
 library(stringr)
+library(stringdist)
 library(ggplot2)
 library(reshape2)
 ```
@@ -69,6 +70,7 @@ str(stormData)
 reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
 ```
 
+2. Select relevant column
 ```{r}
 reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
 ```
@@ -100,12 +102,13 @@ unique(reducedStormData$EVTYPE)
 
 There are leading and tailing space in the storm type.
 
-2. Clean up EVTYPE
-Beside remove leading and trailing space, we also convert all strom type to upper case
+Clean up EVTYPE
+Beside remove leading, trailing and double space, we also convert all storm type to upper case.
 ```{r}
 reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
 reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
+reducedStormData$EVTYPE <- str_squish(reducedStormData$EVTYPE)
 ```
 
 
@@ -113,6 +116,14 @@ reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
+### Handle Mispell
+```{r}
+wrongType <- c("ASTRONOMICAL HIGH TIDE", "AVALANCE", "APACHE COUNTY")
+correctType <- c("ASTRONOMICAL LOW TIDE", "AVALANCHE", "THUNDERSTORM WIND")
+reducedStormData$EVTYPE <- gsub(wrongType, correctType, reducedStormData$EVTYPE)
+```
+
+
 
 ### Remove Unwanted Rows
 
@@ -122,11 +133,6 @@ cleanStormData <- subset(reducedStormData, EVTYPE != removeEvtypeCondition)
 ```
 
 
-```{r}
-wrongType <- c("ASTRONOMICAL HIGH TIDE", "AVALANCE")
-correctType <- c("ASTRONOMICAL LOW TIDE", "AVALANCHE")
-
-```
 
 
 
