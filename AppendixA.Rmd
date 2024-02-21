@@ -24,7 +24,30 @@ evtypeLst
 ```
 
 ```{r}
+reducedStormData$EVTYPE[grepl("^TSTM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+reducedStormData$EVTYPE[grepl("^THU* | *THU*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
 
+reducedStormData$EVTYPE[grepl("^TUNDERSTORM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+
+reducedStormData$EVTYPE[grepl("^TORNADO*", reducedStormData$EVTYPE)] <- "TORNADO"
+reducedStormData$EVTYPE[grepl("^TORNDAO*", reducedStormData$EVTYPE)] <- "TORNADO"
+
+reducedStormData$EVTYPE[grepl("^HAIL*", reducedStormData$EVTYPE)] <- "HAIL"
+reducedStormData$EVTYPE[grepl("^FLASH FLOOD*", reducedStormData$EVTYPE)] <- "FLASH FLOOD"
+reducedStormData$EVTYPE[grepl("^FLOOD*", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("^COASTAL*", reducedStormData$EVTYPE)] <- "COASTAL FLOOD"
+reducedStormData$EVTYPE[grepl("^HURRICANE*", reducedStormData$EVTYPE)] <- "HURRICANE (TYPHOON)"
+
+reducedStormData$EVTYPE[grepl("^EXTREME HEAT*", reducedStormData$EVTYPE)] <- "EXCESSIVE HEAT"
+
+reducedStormData$EVTYPE[grepl("^EXTREME*", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("^EXTENDED*", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
+
+```
+
+```{r}
+evtypeLst <- sort(unique(reducedStormData$EVTYPE))
+evtypeLst
 ```
 
 

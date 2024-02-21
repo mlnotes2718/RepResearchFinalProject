@@ -1,8 +1,7 @@
 ---
 title: "Reproducible Research Project Final"
-date: "2024-02-20"
 output: html_document
-
+date: "2024-02-20"
 ---
 
 ```{r setup, include=FALSE}
@@ -64,6 +63,8 @@ File Structure
 str(stormData)
 ```
 
+**Data contains 902297 with 37 columns.**
+
 ### Processing Data
 1. First we will filter out those data that has fatalities, injuries, property damage and crop damage. 
 ```{r}
@@ -75,7 +76,7 @@ reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=
 reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
 ```
 
-2. Check for NA
+Check for NA
 ```{r}
 stormTypeNA <- is.na(reducedStormData$EVTYPE)
 filter(reducedStormData, stormTypeNA)
@@ -96,11 +97,15 @@ filter(reducedStormData, damageNA)
 ```
 No NA for property or crop damage.
 
+#### Examine Storm Event Classification
 ```{r}
 unique(reducedStormData$EVTYPE)
 ```
 
-There are leading and tailing space in the storm type.
+- There are 488 different type of storm classification. This does not match with the official 48 classification. 
+- There are leading and tailing space in the storm type.
+- Some classification contains 2 space.
+- There is also a mixed of upper and lower case.
 
 Clean up EVTYPE
 Beside remove leading, trailing and double space, we also convert all storm type to upper case.
