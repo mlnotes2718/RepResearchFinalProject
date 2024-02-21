@@ -22,6 +22,7 @@ The following is an analysis of various kind of storm is the United States since
 ```{r, message=FALSE}
 # Import Library
 library(dplyr)
+library(stringr)
 library(ggplot2)
 library(reshape2)
 ```
