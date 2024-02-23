@@ -35,78 +35,218 @@ str(reducedStormData)
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
+## Strategy on Clean Up EVTYPE Mis-Classification
+As shown above, the unique storm event classification has 440 unique classification, whereas in NOAA official storm classification, we have only 48 classes. Massive clean up is required. We have the following methods to re-classified.
 
-### Remove obvious spelling error and categorization error
+*Method 1*
+The most ideal re-classification method is to read the remarks column and determine the actual nature of storm type. However, this is a extremely tediuos task. It might not be effective when our analysis try to account for majore casualties and economic impact.
+
+*Method 2*
+The second method is to re-classified the storm event manually on the obvious error such as spelling error.
+
+**We decided to use method 2.**
 
 ```{r}
+# Number of unique classification
+numOldEvtypes <- length(evtypeLst)
+```
+
+### Re-Classified Obvious Error
+
+```{r}
+# Start Obvious Classification
 reducedStormData$EVTYPE[grepl("ASTRONOMICAL HIGH TIDE", reducedStormData$EVTYPE)] <- "ASTRONOMICAL LOW TIDE"
 reducedStormData$EVTYPE[grepl("AVALANCE", reducedStormData$EVTYPE)] <- "AVALANCHE"
 
-reducedStormData$EVTYPE[grepl("BLACK ICE", reducedStormData$EVTYPE)] <- "ICE STORM"
 
+# Blizzard
+reducedStormData$EVTYPE[grepl("BLIZZARD/WINTER STORM", reducedStormData$EVTYPE)] <- "BLIZZARD"
+reducedStormData$EVTYPE[grepl("GROUND BLIZZARD", reducedStormData$EVTYPE)] <- "BLIZZARD"
+
+
+# Coastal Flood
 reducedStormData$EVTYPE[grepl("^COASTAL*", reducedStormData$EVTYPE)] <- "COASTAL FLOOD"
-reducedStormData$EVTYPE[grepl("^COLD*", reducedStormData$EVTYPE)] <- "COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("EROSION/CSTL FLOOD", reducedStormData$EVTYPE)] <- "COASTAL FLOOD"
 
+
+# COLD/WIND CHILL
+reducedStormData$EVTYPE[grepl("^COLD*", reducedStormData$EVTYPE)] <- "COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("UNSEASONABLE COLD", reducedStormData$EVTYPE)] <- "COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("UNSEASONABLY COLD", reducedStormData$EVTYPE)] <- "COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("COOL AND WET", reducedStormData$EVTYPE)] <- "COLD/WIND CHILL"
+
+
+# Dust Devil/Strom
 reducedStormData$EVTYPE[grepl("^DUST DEVIL*", reducedStormData$EVTYPE)] <- "DUST DEVIL"
 reducedStormData$EVTYPE[grepl("^DUST STORM*", reducedStormData$EVTYPE)] <- "DUST STORM"
+reducedStormData$EVTYPE[grepl("^DRY MICROBURST*", reducedStormData$EVTYPE)] <- "DUST STORM"
+reducedStormData$EVTYPE[grepl("BLOWING DUST", reducedStormData$EVTYPE)] <- "DUST STORM"
 
+
+# Excessive Heat
 reducedStormData$EVTYPE[grepl("^EXTREME HEAT*", reducedStormData$EVTYPE)] <- "EXCESSIVE HEAT"
+reducedStormData$EVTYPE[grepl("^RECORD HEAT*", reducedStormData$EVTYPE)] <- "EXCESSIVE HEAT"
+reducedStormData$EVTYPE[grepl("RECORD/EXCESSIVE HEAT", reducedStormData$EVTYPE)] <- "EXCESSIVE HEAT"
+
+
+# Extreme Cold/Wind Chill
 reducedStormData$EVTYPE[grepl("^EXTREME COLD*", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
 reducedStormData$EVTYPE[grepl("^EXTREME WIND*", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
 reducedStormData$EVTYPE[grepl("^EXTENDED*", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("EXCESSIVE WETNESS", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
+reducedStormData$EVTYPE[grepl("RECORD COLD", reducedStormData$EVTYPE)] <- "EXTREME COLD/WIND CHILL"
 
+# Flash Flood
 reducedStormData$EVTYPE[grepl("^FLASH FLOOD*", reducedStormData$EVTYPE)] <- "FLASH FLOOD"
+
+# Other Flood
 reducedStormData$EVTYPE[grepl("^FLOOD*", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("^URBAN*", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("^RIVER.*FLOOD", reducedStormData$EVTYPE)] <- "FLOOD"
+
+reducedStormData$EVTYPE[grepl("^MINOR FLOODING", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("MAJOR FLOOD", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("BREAKUP FLOODING", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("SMALL STREAM FLOOD", reducedStormData$EVTYPE)] <- "FLOOD"
+reducedStormData$EVTYPE[grepl("RURAL FLOOD", reducedStormData$EVTYPE)] <- "FLOOD"
+
+# Freezing Fog
+reducedStormData$EVTYPE[grepl("FOG", reducedStormData$EVTYPE)] <- "FREEZING FOG"
+
+# Frost/Freeze
 reducedStormData$EVTYPE[grepl("FROST\\FREEZE", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
 reducedStormData$EVTYPE[grepl("FROST", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
 reducedStormData$EVTYPE[grepl("FREEZE", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
-reducedStormData$EVTYPE[grepl("*FIRE*", reducedStormData$EVTYPE)] <- "WILDFIRE"
-reducedStormData$EVTYPE[grepl("^HEAVY RAIN*", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
-reducedStormData$EVTYPE[grepl("^HEAVY SNOW*", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
-reducedStormData$EVTYPE[grepl("*SURF*", reducedStormData$EVTYPE)] <- "HIGH SURF"
 
+reducedStormData$EVTYPE[grepl("FREEZING RAIN", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
+reducedStormData$EVTYPE[grepl("FREEZING DRIZZLE", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
+reducedStormData$EVTYPE[grepl("FREEZING SPRAY", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
+reducedStormData$EVTYPE[grepl("^HYPOTHERMIA.*", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
+reducedStormData$EVTYPE[grepl("HYPERTHERMIA/EXPOSURE", reducedStormData$EVTYPE)] <- "FROST/FREEZE"
+
+
+# Hail
 reducedStormData$EVTYPE[grepl("^HAIL*", reducedStormData$EVTYPE)] <- "HAIL"
-reducedStormData$EVTYPE[grepl("^HEAT*", reducedStormData$EVTYPE)] <- "HEAT"
-reducedStormData$EVTYPE[grepl("^RECORD HEAT*", reducedStormData$EVTYPE)] <- "EXCESSIVE HEAT"
-reducedStormData$EVTYPE[grepl("^HURRICANE*", reducedStormData$EVTYPE)] <- "HURRICANE (TYPHOON)"
+
+
+# Heat
+reducedStormData$EVTYPE[grepl("^HEAT *", reducedStormData$EVTYPE)] <- "HEAT"
+
+
+# Heavy Rain
+reducedStormData$EVTYPE[grepl("^RAIN*", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("^HEAVY RAIN*", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("HEAVY PRECIPITATION", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("HEAVY SHOWER", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("EXCESSIVE RAINFALL", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("RECORD RAINFALL", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("UNSEASONAL RAIN", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+reducedStormData$EVTYPE[grepl("HVY RAIN", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
+
+
+# Heavy Snow
+reducedStormData$EVTYPE[grepl("^HEAVY SNOW*", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("BLOWING SNOW", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("FALLING SNOW/ICE", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("LATE SEASON SNOW", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("EXCESSIVE SNOW", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("HEAVY LAKE SNOW", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+reducedStormData$EVTYPE[grepl("RECORD SNOW", reducedStormData$EVTYPE)] <- "HEAVY SNOW"
+
+
+# High Surf
+reducedStormData$EVTYPE[grepl("^HEAVY SURF*", reducedStormData$EVTYPE)] <- "HIGH SURF"
+reducedStormData$EVTYPE[grepl("HAZARDOUS SURF", reducedStormData$EVTYPE)] <- "HIGH SURF"
+reducedStormData$EVTYPE[grepl("HIGH SURF ADVISORY", reducedStormData$EVTYPE)] <- "HIGH SURF"
+reducedStormData$EVTYPE[grepl("HIGH SWELLS", reducedStormData$EVTYPE)] <- "HIGH SURF"
+reducedStormData$EVTYPE[grepl("HIGH WAVES", reducedStormData$EVTYPE)] <- "HIGH SURF"
+
+
+# High Wind
 reducedStormData$EVTYPE[grepl("^HIGH WIND*", reducedStormData$EVTYPE)] <- "HIGH WIND"
 
+
+# Hurricane (Typhoon)
+reducedStormData$EVTYPE[grepl("^HURRICANE*", reducedStormData$EVTYPE)] <- "HURRICANE (TYPHOON)"
+reducedStormData$EVTYPE[grepl("^TYPHOON", reducedStormData$EVTYPE)] <- "HURRICANE (TYPHOON)"
+
+
+# Ice Storm
 reducedStormData$EVTYPE[grepl("^ICE*", reducedStormData$EVTYPE)] <- "ICE STORM"
+reducedStormData$EVTYPE[grepl("BLACK ICE", reducedStormData$EVTYPE)] <- "ICE STORM"
+reducedStormData$EVTYPE[grepl("^GLAZE", reducedStormData$EVTYPE)] <- "ICE STORM"
 
+
+# Lakeshore Flood
 reducedStormData$EVTYPE[grepl("^LAKE FLOOD", reducedStormData$EVTYPE)] <- "LAKESHORE FLOOD"
-reducedStormData$EVTYPE[grepl("^LAKE EFFECT SNOW", reducedStormData$EVTYPE)] <- "LAKE-EFFECT SNOW"
-reducedStormData$EVTYPE[grepl("^LIGHT*", reducedStormData$EVTYPE)] <- "LIGHTNING"
 
+
+# Lake-Effect Snow
+reducedStormData$EVTYPE[grepl("^LAKE EFFECT SNOW", reducedStormData$EVTYPE)] <- "LAKE-EFFECT SNOW"
+
+
+# Lightning
+reducedStormData$EVTYPE[grepl("^LIGHT*", reducedStormData$EVTYPE)] <- "LIGHTNING"
+reducedStormData$EVTYPE[grepl("^LIGNTNING", reducedStormData$EVTYPE)] <- "LIGHTNING"
+
+
+# Marine Thunderstorm Wind
 reducedStormData$EVTYPE[grepl("^MARINE TSTM WIND", reducedStormData$EVTYPE)] <- "MARINE THUNDERSTORM WIND"
 
 
+# Rip Current
+reducedStormData$EVTYPE[grepl("^RIP CURRENT.*", reducedStormData$EVTYPE)] <- "RIP CURRENT"
+
+
+# Strong Wind 
+reducedStormData$EVTYPE[grepl("^GUST*", reducedStormData$EVTYPE)] <- "STRONG WIND"
+reducedStormData$EVTYPE[grepl("^STRONG WIND*", reducedStormData$EVTYPE)] <- "STRONG WIND"
+reducedStormData$EVTYPE[grepl("^WIND", reducedStormData$EVTYPE)] <- "STRONG WIND"
+
+
+# Thunderstorm Wind
+reducedStormData$EVTYPE[grepl("^TSTM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+reducedStormData$EVTYPE[grepl("^THU*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+reducedStormData$EVTYPE[grepl("^TUNDERSTORM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+reducedStormData$EVTYPE[grepl("^SEVERE*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+
+
+# Tornado
 reducedStormData$EVTYPE[grepl("^TORNADO*", reducedStormData$EVTYPE)] <- "TORNADO"
 reducedStormData$EVTYPE[grepl("^TORNDAO*", reducedStormData$EVTYPE)] <- "TORNADO"
 
-reducedStormData$EVTYPE[grepl("^TSTM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
-reducedStormData$EVTYPE[grepl("^THU*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+
+# Tropical Storm
 reducedStormData$EVTYPE[grepl("^TROPICAL STORM*", reducedStormData$EVTYPE)] <- "TROPICAL STORM"
 
-reducedStormData$EVTYPE[grepl("^TUNDERSTORM*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
-reducedStormData$EVTYPE[grepl("^WATERSPOUT*", reducedStormData$EVTYPE)] <- "WATERSPOUT"
-reducedStormData$EVTYPE[grepl("^WINTER STORM*", reducedStormData$EVTYPE)] <- "WINTER STORM"
-reducedStormData$EVTYPE[grepl("^URBAN*", reducedStormData$EVTYPE)] <- "FLOOD"
-reducedStormData$EVTYPE[grepl("^GUST*", reducedStormData$EVTYPE)] <- "STRONG WIND"
-reducedStormData$EVTYPE[grepl("^STRONG WIND*", reducedStormData$EVTYPE)] <- "STRONG WIND"
 
-reducedStormData$EVTYPE[grepl("^TYPHOON", reducedStormData$EVTYPE)] <- "HURRICANE (TYPHOON)"
-reducedStormData$EVTYPE[grepl("^WIND", reducedStormData$EVTYPE)] <- "STRONG WIND"
+# Waterspout
+reducedStormData$EVTYPE[grepl("^WATERSPOUT*", reducedStormData$EVTYPE)] <- "WATERSPOUT"
+
+
+# Winter Storm
+reducedStormData$EVTYPE[grepl("^WINTER STORM*", reducedStormData$EVTYPE)] <- "WINTER STORM"
+
+
+# Winter Weather
 reducedStormData$EVTYPE[grepl("^WINTER WEATHER*", reducedStormData$EVTYPE)] <- "WINTER WEATHER"
 reducedStormData$EVTYPE[grepl("WINTRY MIX", reducedStormData$EVTYPE)] <- "WINTER WEATHER"
-reducedStormData$EVTYPE[grepl("^SEVERE*", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
-reducedStormData$EVTYPE[grepl(".*SNOW.*", reducedStormData$EVTYPE)] <- "WINTER WEATHER"
-reducedStormData$EVTYPE[grepl("^RIVER.*FLOOD", reducedStormData$EVTYPE)] <- "FLOOD"
-reducedStormData$EVTYPE[grepl("^RAIN*", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
-reducedStormData$EVTYPE[grepl("HVY RAIN", reducedStormData$EVTYPE)] <- "HEAVY RAIN"
-reducedStormData$EVTYPE[grepl("EROSION/CSTL FLOOD", reducedStormData$EVTYPE)] <- "COASTAL FLOOD"
-reducedStormData$EVTYPE[grepl("^GLAZE", reducedStormData$EVTYPE)] <- "ICE STORM"
+reducedStormData$EVTYPE[grepl("^SNOW.*", reducedStormData$EVTYPE)] <- "WINTER WEATHER"
+
+
+
+# Wildfire
+reducedStormData$EVTYPE[grepl("^WILD.*FIRE*", reducedStormData$EVTYPE)] <- "WILDFIRE"
+reducedStormData$EVTYPE[grepl("^BRUSH FIRE", reducedStormData$EVTYPE)] <- "WILDFIRE"
+reducedStormData$EVTYPE[grepl("^FOREST FIRE*", reducedStormData$EVTYPE)] <- "WILDFIRE"
+reducedStormData$EVTYPE[grepl("^GRASS FIRE*", reducedStormData$EVTYPE)] <- "WILDFIRE"
+
+
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
-length(evtypeLst)
+print(paste("Before re-classification, we have unqiue class of:", as.character(numOldEvtypes)))
+print(paste("After re-classification, we have unqiue class of:", as.character(length(evtypeLst))))
+
+
 ```
 
 ```{r}
@@ -126,51 +266,3 @@ reducedStormData <- reducedStormData[reducedStormData$EVTYPE != "?",]
 str(reducedStormData)
 ```
 
-```{r}
-evtypeLst <- sort(unique(reducedStormData$EVTYPE))
-evtypeLst
-```
-
-```{r}
-conditionLst <- c("APACHE COUNTY","COLD AIR TORNADO","BEACH EROSION", "BLIZZARD/WINTER STORM", "BLOWING DUST","BLOWING SNOW", "BREAKUP FLOODING", "BRUSH FIRE")
-f1 <- reducedStormData[reducedStormData$EVTYPE %in% conditionLst, c("EVTYPE","REMARKS")]
-
-for (i in 1:nrow(f1)) {
-  print(f1[i,1])
-  print(f1[i,2])
-  print("---")
-}
-
-```
-
-"APACHE COUNTY" "THUNDERSTORM WIND" "COLD AIR TORNADO" "TORNADO"
-
-```{r}
-reducedStormData$EVTYPE[grepl("APACHE COUNTY", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
-```
-
-```{r}
-evtypeLst <- sort(unique(reducedStormData$EVTYPE))
-evtypeLst
-```
-
-```{r}
-af <- filter(reducedStormData, EVTYPE=="AGRICULTURAL FREEZE")
-af
-```
-
-```{r}
-af[,"REMARKS"]
-```
-
-```{r}
-ac <- filter(reducedStormData, EVTYPE=="APACHE COUNTY")
-ac
-
-```
-
-```{r}
-ac[,"REMARKS"]
-```
-
-To classified as "THUNDERSTORM WIND"
