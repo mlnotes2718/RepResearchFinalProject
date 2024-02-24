@@ -3,7 +3,29 @@ title: "AppendixA"
 date: "2024-02-21"
 ---
 
-### Setting Envionment
+# Appendix A - Fixing Classification Error (Column: EVTYPE)
+
+There are only 48 official classification for the storm data according to NOAA. However, after filtering out the columns we want, we still have about 440 unique classification. Massive clean up is required.
+
+At first glance, a lot of the classification are merely spelling errors or in abbreviated form. However, some classification need to be explored further by examining the remarks column.
+
+## Strategy on Clean Up EVTYPE Misclassification
+
+We have the following methods to re-classified.
+
+**Strategy 1**
+
+The most ideal re-classification method is to read the remarks column of all those classification that are not under the official classification and determine the actual nature of storm type. However, this is a extremely tedious task. It might not be effective when our analysis try to account for major casualties and economic impact.
+
+**Strategy 2**
+
+The second strategy is to re-classified the storm event manually on the obvious error such as spelling error and abbreviations. We will target unique classification of less than 100.
+
+**Conclusion**
+
+After much consideration, we will adopt the second strategy as it is more cost effective in terms of time spent.
+
+### Setting Environment
 
 ```{r, message=FALSE}
 # Import Library
@@ -35,16 +57,8 @@ str(reducedStormData)
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
-## Strategy on Clean Up EVTYPE Mis-Classification
-As shown above, the unique storm event classification has 440 unique classification, whereas in NOAA official storm classification, we have only 48 classes. Massive clean up is required. We have the following methods to re-classified.
 
-*Method 1*
-The most ideal re-classification method is to read the remarks column and determine the actual nature of storm type. However, this is a extremely tediuos task. It might not be effective when our analysis try to account for majore casualties and economic impact.
-
-*Method 2*
-The second method is to re-classified the storm event manually on the obvious error such as spelling error.
-
-**We decided to use method 2.**
+**As shown above, we have 440 unique classification.**
 
 ```{r}
 # Number of unique classification
@@ -254,15 +268,31 @@ evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
 
+## Checking Obvious Misclassification
+
+### Checking on classification ?
 
 ```{r}
 filter(reducedStormData, EVTYPE=="?")
 ```
 
-No data, no remarks. Hence row to be removed.
+**No data, no remarks. Hence row to be removed**.
 
 ```{r}
 reducedStormData <- reducedStormData[reducedStormData$EVTYPE != "?",]
 str(reducedStormData)
 ```
 
+### Checking classification "APACHE COUNTY"
+
+```{r}
+ac <- filter(reducedStormData, EVTYPE=="APACHE COUNTY")
+ac[,"REMARKS"]
+```
+
+**This is to reclassified to "THUNDERSTORM WIND"**
+
+```{r}
+# Reclassified APACHE COUNTY
+reducedStormData$EVTYPE[grepl("APACHE COUNTY", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
+```
