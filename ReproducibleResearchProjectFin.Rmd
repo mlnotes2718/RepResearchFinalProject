@@ -436,7 +436,7 @@ We use select function to re-order the columns
 
 ```{r}
 cleanStormData <- select(cleanStormData, STATE, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, PROPDMGEXPNUM, PROPDMGSUM, CROPDMG, CROPDMGEXP,CROPDMGSUM, REMARKS)
-cleanStormData
+head(cleanStormData)
 ```
 
 Next, We then create a data frame that is group by the event type, removing fatalities and injuries that are 0.
