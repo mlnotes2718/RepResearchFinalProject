@@ -16,6 +16,15 @@ This report and the relevant data is available at <https://github.com/mlnotes271
 
 The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm.
 
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+    
+2. Across the United States, which types of events have the greatest economic consequences?
+
+.......
+
+......
+
 ## DATA PROCESSING
 
 ### Setting Environment
@@ -43,7 +52,10 @@ Documentation of Data Source: [National Weather Service Storm Data Documentation
 
 ```{r, cache = TRUE}
 fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
-download.file(fileURL, destfile = "./StormData.csv.bz2")
+if(!file.exists("./StormData.csv.bz2")) {
+    download.file(fileURL, destfile = "./StormData.csv.bz2")
+}
+
 ```
 
 ### Data Dictionary
@@ -56,7 +68,7 @@ download.file(fileURL, destfile = "./StormData.csv.bz2")
 
 ### Read File
 
-```{r, cache=TRUE}
+```{r stormData,cache = TRUE, cache.extra = file.info("StormData.csv.bz2")}
 stormData <- read.csv("StormData.csv.bz2")
 ```
 
@@ -110,6 +122,7 @@ No NA for property or crop damage.
 ```{r}
 str(reducedStormData)
 ```
+**We have 254633 rows with 10 columns.**
 
 #### Examine Storm Event Classification
 
@@ -135,8 +148,8 @@ reducedStormData$EVTYPE <- str_squish(reducedStormData$EVTYPE)
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
-
 **Misclassification reduce to 440**.
+
 
 ### Fixing Misclassification
 
@@ -356,12 +369,29 @@ str(cleanStormData)
 
 **We have a total of 254632 rows and 10 columns.**
 
-Convert PROPDMGEXP and CROPDMGEXP
+### Convert PROPDMGEXP and CROPDMGEXP
+
+We also need to convert the exponent of the property and crop damage. The exponent of k or K represent thousands. M or m in millions. The number is 10 to the power of the number. (e.g. 7 = 10^7)
+
+First we need to find out the unique exponent of PROPDMGEXP and CROPDMGEXP.
 
 ```{r}
-findCon <- c("?","+","-","k","K","m","M","b","B")
-replacement <- c(0,1,0,1000,1000,1000000,1000000,1000000000,1000000000)
-reducedStormData$PROPDMGEXP <- replace(reducedStormData$PROPDMGEXP, reducedStormData$PROPDMGEXP %in% findCon, replacement)
+uniquePROPDMGEXP <- toupper(cleanStormData$PROPDMGEXP)
+uniquePROPDMGEXP <- unique(uniquePROPDMGEXP)
+uniqueCROPDMGEXP <- toupper(cleanStormData$CROPDMGEXP)
+uniqueCROPDMGEXP <- unique(uniqueCROPDMGEXP)
+uniqueBothDMGEXP <- union(uniquePROPDMGEXP, uniqueCROPDMGEXP)
+uniqueBothDMGEXP <- sort(uniqueBothDMGEXP)
+uniqueBothDMGEXP
+```
+
+
+```{r}
+replacement <- c(0,0,0,1,10^0,10^2,10^3,10^4,10^5,10^6,10^7,1000000000,100,1000,1000000)
+refTable <- cbind(uniqueBothDMGEXP, replacement)
+#cleanStormData$PROPDMGEXP <- replace(cleanStormData$PROPDMGEXP, cleanStormData$PROPDMGEXP %in% uniqueBothDMGEXP, replacement)
+cleanStormData$PROPDMGEXP[cleanStormData$PROPDMGEXP %in% uniqueBothDMGEXP] <- refTable["-"
+                                                                              ]
 ```
 
 2.  We then create a data frame that is group by the event type, removing fatalities and injuries that are 0.
@@ -406,3 +436,5 @@ fatalDf <- reducedData %>%
     arrange(desc(FATALITIES_TOTAL))
 
 ```
+
+## Results
