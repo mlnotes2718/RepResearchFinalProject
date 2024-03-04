@@ -9,16 +9,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Analysis of Human and Economic Impact of Storms in United States
-This report and teh relevant data is available at [https://github.com/mlnotes2718/RepResearchFinalProject](https://github.com/mlnotes2718/RepResearchFinalProject)
+
+This report and the relevant data is available at <https://github.com/mlnotes2718/RepResearchFinalProject>
 
 ## SYNOPSIS
+
 The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm.
-
-
 
 ## DATA PROCESSING
 
-### Setting Envionment
+### Setting Environment
+
 ```{r, message=FALSE}
 # Import Library
 library(dplyr)
@@ -32,34 +33,35 @@ library(reshape2)
 
 Data Source: [U.S. National Oceanic and Atmospheric Administration (NOAA) - Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2)
 
-URL: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
+URL: <https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2>
 
-Documentation of Data Source: 
-[National Weather Service Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+Documentation of Data Source: [National Weather Service Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
 
 [National Climatic Data Center Storm Events FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
 
-
-
 ### Download Data File
+
 ```{r, cache = TRUE}
 fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 download.file(fileURL, destfile = "./StormData.csv.bz2")
 ```
 
 ### Data Dictionary
-|Variable Name | Description |
-|---|---|
-|stormData | The raw data that is read from StormData.csv.bz2|
-|reducedData | raw dataset with only only 7 columns |
 
+| Variable Name    | Description                                             |
+|------------------|---------------------------------------------------------|
+| stormData        | The raw data that is read from StormData.csv.bz2        |
+| reducedStormData | raw dataset with only only 7 columns                    |
+| evtypeLst        | list that contains the unique event type of the dataset |
 
 ### Read File
+
 ```{r, cache=TRUE}
 stormData <- read.csv("StormData.csv.bz2")
 ```
 
 File Structure
+
 ```{r}
 str(stormData)
 ```
@@ -67,23 +69,27 @@ str(stormData)
 **Data contains 902297 with 37 columns.**
 
 ### Processing Data
-1. First we will filter out those data that has fatalities, injuries, property damage and crop damage. 
+
+1.  First we will filter out those data that has fatalities, injuries, property damage and crop damage.
+
 ```{r}
 reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
 ```
 
-2. Select relevant column
+2.  Select relevant column
+
 ```{r}
 reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
 ```
 
 Check for NA
+
 ```{r}
 stormTypeNA <- is.na(reducedStormData$EVTYPE)
 filter(reducedStormData, stormTypeNA)
 ```
-No NA for storm type
 
+No NA for storm type
 
 ```{r}
 casualtiesNA <- is.na(reducedStormData$FATALITIES | reducedStormData$INJURIES)
@@ -96,20 +102,28 @@ No NA for fatalities or injuries.
 damageNA <- is.na(reducedStormData$PROPDMG | reducedStormData$CROPDMG)
 filter(reducedStormData, damageNA)
 ```
+
 No NA for property or crop damage.
 
+3.  File Structure after reduction.
+
+```{r}
+str(reducedStormData)
+```
+
 #### Examine Storm Event Classification
+
 ```{r}
 unique(reducedStormData$EVTYPE)
 ```
 
-- There are 488 different type of storm classification. This does not match with the official 48 classification. 
-- There are leading and tailing space in the storm type.
-- Some classification contains 2 space.
-- There is also a mixed of upper and lower case.
+-   There are 488 different type of storm classification. This does not match with the official 48 classification.
+-   There are leading and tailing space in the storm type.
+-   Some classification contains 2 space.
+-   There is also a mixed of upper and lower case.
 
-Clean up EVTYPE
-Beside remove leading, trailing and double space, we also convert all storm type to upper case.
+Clean up EVTYPE Beside remove leading, trailing and double space, we also convert all storm type to upper case.
+
 ```{r}
 reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
 reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
@@ -117,21 +131,23 @@ reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- str_squish(reducedStormData$EVTYPE)
 ```
 
-
 ```{r}
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
+
 **Misclassification reduce to 440**.
 
 ### Fixing Misclassification
-The most ideal way to handle misclassification is to read the remarks for each event that are misclassified. However, due to constrain of resource, we adopt the strategy of reclassify those obvious spelling error by hand. We will not reclassify all misclassification. We are good as long as the unqiue classification is less than 100.
 
-However, we did examine the remarks details of 2 obvious misclassification. They are "?" and "APACHE COUNTY"
+The most ideal way to handle misclassification is to read the remarks for each event that are misclassified. However, due to constrain of resource, we adopt the strategy of reclassify those obvious spelling error by hand. We will not reclassify all misclassification. We are good as long as the unique classification is less than 100.
+
+However, we did examine the remarks of 2 obvious misclassification. They are "?" and "APACHE COUNTY"
 
 The following code is our clean up code.
 
-For further details please refer to Appendix A in separarte document.
+For further details please refer to Appendix A in separate document.
+
 ```{r}
 # Start Obvious Classification
 reducedStormData$EVTYPE[grepl("ASTRONOMICAL HIGH TIDE", reducedStormData$EVTYPE)] <- "ASTRONOMICAL LOW TIDE"
@@ -325,8 +341,6 @@ reducedStormData$EVTYPE[grepl("^GRASS FIRE*", reducedStormData$EVTYPE)] <- "WILD
 reducedStormData$EVTYPE[grepl("APACHE COUNTY", reducedStormData$EVTYPE)] <- "THUNDERSTORM WIND"
 ```
 
-
-
 ### Remove Unwanted Rows
 
 ```{r}
@@ -334,18 +348,24 @@ removeEvtypeCondition <- c("?")
 cleanStormData <- subset(reducedStormData, EVTYPE != removeEvtypeCondition)
 ```
 
+File Structure of Clean Data
 
+```{r}
+str(cleanStormData)
+```
 
-
+**We have a total of 254632 rows and 10 columns.**
 
 Convert PROPDMGEXP and CROPDMGEXP
+
 ```{r}
 findCon <- c("?","+","-","k","K","m","M","b","B")
 replacement <- c(0,1,0,1000,1000,1000000,1000000,1000000000,1000000000)
 reducedStormData$PROPDMGEXP <- replace(reducedStormData$PROPDMGEXP, reducedStormData$PROPDMGEXP %in% findCon, replacement)
 ```
 
-2. We then create a dataframe that is group by the event type, removing fatalities and injuries that are 0.
+2.  We then create a data frame that is group by the event type, removing fatalities and injuries that are 0.
+
 ```{r}
 fatalDf <- reducedStormData %>%
     group_by(EVTYPE) %>%
@@ -355,25 +375,29 @@ fatalDf <- reducedStormData %>%
 
 ```
 
-3. We select the top 10 event that has the worst fatalities and/or injuries
+3.  We select the top 10 event that has the worst fatalities and/or injuries
+
 ```{r}
 rankedFatalities <- fatalDf[1:10,]
 rankedFatalities
 ```
 
-4. We need to convert and melt the dataframe into a format for plotting
+4.  We need to convert and melt the dataframe into a format for plotting
+
 ```{r}
 plotData <- as.data.frame(rankedFatalities)
 meltedPlotData <- melt(plotData, id.vars="EVTYPE")
 meltedPlotData
 ```
 
-5. Plotting 
+5.  Plotting
+
 ```{r}
 ggplot(meltedPlotData, aes(fill=variable,x=reorder(EVTYPE, -value),y=value))+ geom_bar(position="stack",stat="identity") + ylab("Number of Casualties")+ xlab("Type Of Disaster")+ggtitle("Top 10 Casualties Group by Disaster Type")+ theme(axis.text.x = element_text(angle=45, hjust=1))
 ```
 
 processing data and convert the column
+
 ```{r}
 fatalDf <- reducedData %>%
     group_by(EVTYPE) %>%
@@ -382,4 +406,3 @@ fatalDf <- reducedData %>%
     arrange(desc(FATALITIES_TOTAL))
 
 ```
-
