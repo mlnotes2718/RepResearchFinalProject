@@ -15,6 +15,7 @@ This report and teh relevant data is available at [https://github.com/mlnotes271
 The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm.
 
 
+
 ## DATA PROCESSING
 
 ### Setting Envionment
