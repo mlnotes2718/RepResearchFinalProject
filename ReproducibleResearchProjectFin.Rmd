@@ -57,7 +57,7 @@ if(!file.exists("./StormData.csv.bz2")) {
 ### Data Dictionary
 
 | Variable Name    | Description                                             |
-|-------------------|-----------------------------------------------------|
+|------------------|------------------------------------------------------|
 | stormData        | The raw data that is read from StormData.csv.bz2        |
 | reducedStormData | raw dataset with only only 7 columns                    |
 | evtypeLst        | list that contains the unique event type of the dataset |
@@ -414,7 +414,7 @@ uniqueBothDMGEXP <- sort(uniqueBothDMGEXP)
 uniqueBothDMGEXP
 ```
 
-The coresponding replacement values will be as follows:
+The corresponding replacement values will be as follows:
 
 ```{r}
 replacement <- c(0,0,1,10^0,10^2,10^3,10^4,10^5,10^6,10^7,1000000000,100,1000,1000000)
@@ -426,10 +426,10 @@ We create a new column called PROPDMGEXPNUM which store the numeric values based
 
 ```{r}
 cleanStormData <- cleanStormData %>%
-mutate(PROPDMGEXPNUM = replacement[cleanStormData$PROPDMGEXP]) %>%
-mutate(CROPDMGEXPNUM = replacement[cleanStormData$CROPDMGEXP]) %>%
-mutate(PROPDMGSUM = PROPDMG * PROPDMGEXPNUM) %>%
-mutate(CROPDMGSUM = CROPDMG * CROPDMGEXPNUM) 
+  mutate(PROPDMGEXPNUM = replacement[cleanStormData$PROPDMGEXP]) %>%
+  mutate(CROPDMGEXPNUM = replacement[cleanStormData$CROPDMGEXP]) %>%
+  mutate(PROPDMGSUM = PROPDMG * PROPDMGEXPNUM) %>%
+  mutate(CROPDMGSUM = CROPDMG * CROPDMGEXPNUM) 
 ```
 
 We use select function to re-order the columns
