@@ -30,7 +30,6 @@ Based on the results, we concluded that the storm type that caused the most huma
 # Import Library
 library(dplyr)
 library(stringr)
-library(stringdist)
 library(ggplot2)
 library(reshape2)
 ```
@@ -58,11 +57,12 @@ if(!file.exists("./StormData.csv.bz2")) {
 ### Data Dictionary
 
 | Variable Name    | Description                                             |
-|------------------|------------------------------------------------------|
+|-------------------|-----------------------------------------------------|
 | stormData        | The raw data that is read from StormData.csv.bz2        |
 | reducedStormData | raw dataset with only only 7 columns                    |
 | evtypeLst        | list that contains the unique event type of the dataset |
 | cleanStormData   | cleaned dataset that have EVTYPE fixed.                 |
+|                  |                                                         |
 
 ### Read File
 
@@ -86,7 +86,7 @@ str(stormData)
 reducedStormData <- filter(stormData, FATALITIES != 0 | INJURIES !=0 |PROPDMG !=0 | CROPDMG != 0)
 ```
 
-2.  Select relevant column
+2.  We select relevant column for our analysis. We do not need all the 37 columns from the raw data.
 
 ```{r}
 reducedStormData <- select(reducedStormData, STATE, BGN_DATE, EVTYPE, FATALITIES,INJURIES,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP,REMARKS)
@@ -115,7 +115,7 @@ filter(reducedStormData, damageNA)
 
 No NA for property or crop damage.
 
-3.  File Structure after reduction.
+3.  File Structure after file size reduction.
 
 ```{r}
 str(reducedStormData)
@@ -134,7 +134,7 @@ unique(reducedStormData$EVTYPE)
 -   Some classification contains 2 space.
 -   There is also a mixed of upper and lower case.
 
-Clean up EVTYPE Beside remove leading, trailing and double space, we also convert all storm type to upper case.
+We need to clean up EVTYPE. Besides remove leading, trailing and double space, we also need to convert all storm type to upper case.
 
 We also check the Property and Crop Damage Exponent
 
@@ -385,7 +385,7 @@ str(cleanStormData)
 
 ### Convert PROPDMGEXP and CROPDMGEXP
 
-We also need to convert the exponent of the property and crop damage. The exponent of k or K represent thousands. M or m in millions. The number is 10 to the power of the number. (e.g. 7 = 10\^7)
+We also need to convert the exponent of the property and crop damage. The exponent of k or K represent thousands. M or m in millions. Any number is equivalent to 10 to the power of the number. (e.g. 7 = 10\^7)
 
 First we need to find out the unique exponent of PROPDMGEXP and CROPDMGEXP.
 
@@ -414,7 +414,7 @@ uniqueBothDMGEXP <- sort(uniqueBothDMGEXP)
 uniqueBothDMGEXP
 ```
 
-The replacement values will be as follows:
+The coresponding replacement values will be as follows:
 
 ```{r}
 replacement <- c(0,0,1,10^0,10^2,10^3,10^4,10^5,10^6,10^7,1000000000,100,1000,1000000)
