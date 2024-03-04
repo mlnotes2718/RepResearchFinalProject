@@ -14,16 +14,13 @@ This report and the relevant data is available at <https://github.com/mlnotes271
 
 ## SYNOPSIS
 
-The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm.
+The following is an analysis of various kind of storm is the United States since 1950s. This analysis focus on human casualties and financial impact causes by various kind of storm. We need to answer the following questions:
 
-1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+1.  Across the United States, which types of events are most harmful with respect to population health?
 
-    
-2. Across the United States, which types of events have the greatest economic consequences?
+2.  Across the United States, which types of events have the greatest economic consequences?
 
-.......
-
-......
+Based on the results, we concluded that the storm type that caused the most human casualties is **Tornado** and it is different from the storm type that has the most financial damage. The number one storm that caused the most financial damage is **Flood**. Hence policy maker should consider different type of response when addressing different type of
 
 ## DATA PROCESSING
 
@@ -61,10 +58,11 @@ if(!file.exists("./StormData.csv.bz2")) {
 ### Data Dictionary
 
 | Variable Name    | Description                                             |
-|------------------|---------------------------------------------------------|
+|------------------|------------------------------------------------------|
 | stormData        | The raw data that is read from StormData.csv.bz2        |
 | reducedStormData | raw dataset with only only 7 columns                    |
 | evtypeLst        | list that contains the unique event type of the dataset |
+| cleanStormData   | cleaned dataset that have EVTYPE fixed.                 |
 
 ### Read File
 
@@ -122,6 +120,7 @@ No NA for property or crop damage.
 ```{r}
 str(reducedStormData)
 ```
+
 **We have 254633 rows with 10 columns.**
 
 #### Examine Storm Event Classification
@@ -137,19 +136,34 @@ unique(reducedStormData$EVTYPE)
 
 Clean up EVTYPE Beside remove leading, trailing and double space, we also convert all storm type to upper case.
 
+We also check the Property and Crop Damage Exponent
+
+```{r}
+unique(reducedStormData$PROPDMGEXP)
+```
+
+```{r}
+unique(reducedStormData$CROPDMGEXP)
+```
+
+There is also mixed lower and upper which we can fixed together. The following code is to clean up trailing and leading space and upper and lower case for EVTYPE, PROPDMGEXP and CROPDMGEXP
+
 ```{r}
 reducedStormData$EVTYPE <- trimws(reducedStormData$EVTYPE, which = c("both"), whitespace = "[ \t\r\n]")
 reducedStormData$EVTYPE <- tolower(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- toupper(reducedStormData$EVTYPE)
 reducedStormData$EVTYPE <- str_squish(reducedStormData$EVTYPE)
+
+reducedStormData$PROPDMGEXP <- toupper(reducedStormData$PROPDMGEXP)
+reducedStormData$CROPDMGEXP <- toupper(reducedStormData$CROPDMGEXP)
 ```
 
 ```{r}
 evtypeLst <- sort(unique(reducedStormData$EVTYPE))
 evtypeLst
 ```
-**Misclassification reduce to 440**.
 
+**Misclassification reduce to 440**.
 
 ### Fixing Misclassification
 
@@ -371,33 +385,64 @@ str(cleanStormData)
 
 ### Convert PROPDMGEXP and CROPDMGEXP
 
-We also need to convert the exponent of the property and crop damage. The exponent of k or K represent thousands. M or m in millions. The number is 10 to the power of the number. (e.g. 7 = 10^7)
+We also need to convert the exponent of the property and crop damage. The exponent of k or K represent thousands. M or m in millions. The number is 10 to the power of the number. (e.g. 7 = 10\^7)
 
 First we need to find out the unique exponent of PROPDMGEXP and CROPDMGEXP.
 
 ```{r}
-uniquePROPDMGEXP <- toupper(cleanStormData$PROPDMGEXP)
-uniquePROPDMGEXP <- unique(uniquePROPDMGEXP)
-uniqueCROPDMGEXP <- toupper(cleanStormData$CROPDMGEXP)
-uniqueCROPDMGEXP <- unique(uniqueCROPDMGEXP)
+uniquePROPDMGEXP <- unique(cleanStormData$PROPDMGEXP)
+uniqueCROPDMGEXP <- unique(cleanStormData$CROPDMGEXP)
 uniqueBothDMGEXP <- union(uniquePROPDMGEXP, uniqueCROPDMGEXP)
 uniqueBothDMGEXP <- sort(uniqueBothDMGEXP)
 uniqueBothDMGEXP
 ```
 
+The empty string "" will caused a problem, so we will replace those empty string with '-' on the clean dataset.
 
 ```{r}
-replacement <- c(0,0,0,1,10^0,10^2,10^3,10^4,10^5,10^6,10^7,1000000000,100,1000,1000000)
-refTable <- cbind(uniqueBothDMGEXP, replacement)
-#cleanStormData$PROPDMGEXP <- replace(cleanStormData$PROPDMGEXP, cleanStormData$PROPDMGEXP %in% uniqueBothDMGEXP, replacement)
-cleanStormData$PROPDMGEXP[cleanStormData$PROPDMGEXP %in% uniqueBothDMGEXP] <- refTable["-"
-                                                                              ]
+cleanStormData$PROPDMGEXP[cleanStormData$PROPDMGEXP == ""] <- '-'
+cleanStormData$CROPDMGEXP[cleanStormData$CROPDMGEXP == ""] <- '-'
 ```
 
-2.  We then create a data frame that is group by the event type, removing fatalities and injuries that are 0.
+Next, we regenerate the unique values again
 
 ```{r}
-fatalDf <- reducedStormData %>%
+uniquePROPDMGEXP <- unique(cleanStormData$PROPDMGEXP)
+uniqueCROPDMGEXP <- unique(cleanStormData$CROPDMGEXP)
+uniqueBothDMGEXP <- union(uniquePROPDMGEXP, uniqueCROPDMGEXP)
+uniqueBothDMGEXP <- sort(uniqueBothDMGEXP)
+uniqueBothDMGEXP
+```
+
+The replacement values will be as follows:
+
+```{r}
+replacement <- c(0,0,1,10^0,10^2,10^3,10^4,10^5,10^6,10^7,1000000000,100,1000,1000000)
+names(replacement) <- uniqueBothDMGEXP
+replacement
+```
+
+We create a new column called PROPDMGEXPNUM which store the numeric values based on the reference above. Similar for CROPDMGEXPNUM. We also compute the total damage in new column PROPDMGSUM and CROPDMGSUM
+
+```{r}
+cleanStormData <- cleanStormData %>%
+mutate(PROPDMGEXPNUM = replacement[cleanStormData$PROPDMGEXP]) %>%
+mutate(CROPDMGEXPNUM = replacement[cleanStormData$CROPDMGEXP]) %>%
+mutate(PROPDMGSUM = PROPDMG * PROPDMGEXPNUM) %>%
+mutate(CROPDMGSUM = CROPDMG * CROPDMGEXPNUM) 
+```
+
+We use select function to re-order the columns
+
+```{r}
+cleanStormData <- select(cleanStormData, STATE, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, PROPDMGEXPNUM, PROPDMGSUM, CROPDMG, CROPDMGEXP,CROPDMGSUM, REMARKS)
+cleanStormData
+```
+
+Next, We then create a data frame that is group by the event type, removing fatalities and injuries that are 0.
+
+```{r}
+fatalDf <- cleanStormData %>%
     group_by(EVTYPE) %>%
     filter(FATALITIES != 0 | INJURIES != 0) %>%
     summarise(FATALITIES_TOTAL=sum(FATALITIES), INJURIES_TOTAL=sum(INJURIES)) %>%
@@ -405,36 +450,69 @@ fatalDf <- reducedStormData %>%
 
 ```
 
-3.  We select the top 10 event that has the worst fatalities and/or injuries
+We select the top 10 event that has the worst fatalities and/or injuries
 
 ```{r}
 rankedFatalities <- fatalDf[1:10,]
 rankedFatalities
 ```
 
-4.  We need to convert and melt the dataframe into a format for plotting
+We need to convert and melt the dataframe into a format for plotting
 
 ```{r}
 plotData <- as.data.frame(rankedFatalities)
-meltedPlotData <- melt(plotData, id.vars="EVTYPE")
+meltedPlotData <- melt(plotData, id.vars="EVTYPE", variable.name = "Casualties")
 meltedPlotData
 ```
 
-5.  Plotting
-
 ```{r}
-ggplot(meltedPlotData, aes(fill=variable,x=reorder(EVTYPE, -value),y=value))+ geom_bar(position="stack",stat="identity") + ylab("Number of Casualties")+ xlab("Type Of Disaster")+ggtitle("Top 10 Casualties Group by Disaster Type")+ theme(axis.text.x = element_text(angle=45, hjust=1))
+econDf <- cleanStormData %>%
+    group_by(EVTYPE) %>%
+    filter(PROPDMGSUM != 0 | CROPDMGSUM != 0) %>%
+    summarise(PROPDMG_TOTAL=sum(PROPDMGSUM), CROPDMG_TOTAL=sum(CROPDMGSUM)) %>%
+    arrange(desc(PROPDMG_TOTAL))
 ```
 
-processing data and convert the column
+```{r}
+econDf[1:10,]
+```
 
 ```{r}
-fatalDf <- reducedData %>%
-    group_by(EVTYPE) %>%
-    filter(FATALITIES != 0 | INJURIES != 0) %>%
-    summarise(FATALITIES_TOTAL=sum(FATALITIES), INJURIES_TOTAL=sum(INJURIES)) %>%
-    arrange(desc(FATALITIES_TOTAL))
+rankedEconomicImpact <- econDf[1:10,]
+rankedEconomicImpact$PROPDMG_TOTAL <- rankedEconomicImpact$PROPDMG_TOTAL/1000000000
+rankedEconomicImpact$CROPDMG_TOTAL <- rankedEconomicImpact$CROPDMG_TOTAL/1000000000
+rankedEconomicImpact <- rankedEconomicImpact %>%
+  rename(Property_Damage=PROPDMG_TOTAL, Crop_Damage = CROPDMG_TOTAL)
+rankedEconomicImpact
+```
 
+```{r}
+plotDataEcon <- as.data.frame(rankedEconomicImpact)
+meltedPlotDataEcon <- melt(plotDataEcon, id.vars="EVTYPE", variable.name = "Damages")
+meltedPlotDataEcon
 ```
 
 ## Results
+
+```{r}
+ggplot(meltedPlotData, aes(fill=Casualties,x=reorder(EVTYPE, value),y=value))+ geom_bar(position="stack",stat="identity") + ylab("Number of Casualties")+ xlab("Type Of Disaster")+ggtitle("Top 10 Casualties Group by Disaster Type")+ coord_flip()+ facet_grid(. ~ Casualties)+
+theme(legend.position="bottom")
+```
+
+```{r}
+rankedFatalities
+```
+
+```{r}
+ggplot(meltedPlotDataEcon, aes(fill=Damages,x=reorder(EVTYPE, value),y=value))+ geom_bar(position="stack",stat="identity") + ylab("Total Economic Damages in Billions")+ xlab("Type Of Disaster")+ggtitle("Top 10 Economic damages Group by Disaster Type")+ coord_flip()+ 
+facet_grid(. ~ Damages)+
+theme(legend.position="bottom")
+```
+
+```{r}
+rankedEconomicImpact
+```
+
+## Conclusion
+
+Based on the results above, policy maker can rank the storm type that caused the most fatalities and perform the same for those storm type that caused the most economic damage.
